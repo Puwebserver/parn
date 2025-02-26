@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puweb AI Chat</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0C1219; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .chat-container { width: 100%; height: 100vh; display: flex; flex-direction: column; }
+        .chat-box { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .message { padding: 12px; border-radius: 20px; max-width: 80%; display: flex; align-items: center; }
+        .user { background: #007AFF; color: white; align-self: flex-end; text-align: right; }
+        .bot { background: #2C2F33; color: white; align-self: flex-start; }
+        .profile-img { width: 40px; height: 40px; border-radius: 50%; margin: 0 10px; }
+        .input-container { display: flex; padding: 15px; background: #1E1E1E; box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.2); align-items: center; }
+        textarea { flex: 1; padding: 12px; border: none; border-radius: 25px; background: #2C2F33; color: white; font-size: 16px; outline: none; resize: none; overflow: hidden; min-height: 50px; max-height: 150px; }
+        button { padding: 12px 20px; background: #007AFF; border: none; color: white; border-radius: 25px; cursor: pointer; margin-left: 10px; font-size: 16px; }
+        .message span { font-weight: bold; display: block; font-size: 14px; margin-bottom: 3px; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-box" id="chatBox"></div>
+        <div class="input-container">
+            <textarea id="userInput" placeholder="Enter your message..." oninput="autoResize(event)" onkeydown="handleKeyPress(event)"></textarea>
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = "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";
+        const API_URL = "https://openrouter.ai/api/v1/chat/completions";
+        
+        async function sendMessage() {
+            const inputField = document.getElementById("userInput");
+            const chatBox = document.getElementById("chatBox");
+            const userMessage = inputField.value.trim();
+            if (!userMessage) return;
+            
+            chatBox.innerHTML += `<div class='message user'><span>Puweb Server User</span><img src='/mnt/data/Untitled design (34).png' class='profile-img'>${userMessage}</div>`;
+            inputField.value = "";
+            inputField.style.height = "50px";
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${API_KEY}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "google/gemini-2.0-flash-001",
+                        messages: [{ role: "user", content: userMessage }]
+                    })
+                });
+                const data = await response.json();
+                const botReply = data.choices[0].message.content;
+                chatBox.innerHTML += `<div class='message bot'><img src='/mnt/data/Untitled design (35).png' class='profile-img'><span>Puweb Ai via</span>${botReply}</div>`;
+            } catch (error) {
+                chatBox.innerHTML += `<div class='message bot'><img src='/mnt/data/Untitled design (35).png' class='profile-img'><span>Puweb Ai via</span>Sorry, I couldn't process your request.</div>`;
+            }
+            
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function autoResize(event) {
+            const textarea = event.target;
+            textarea.style.height = "50px";
+            textarea.style.height = Math.min(textarea.scrollHeight, 150) + "px";
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
